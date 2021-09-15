@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace RockPaperScissors
 {
@@ -15,13 +16,14 @@ namespace RockPaperScissors
         {
             if (!CheckInput(args))
             {
-                Print("\nThe input example:");
-                Print("rock paper scissors lizard Spock");
+                Println();
+                Println("The input example:");
+                Println("rock paper scissors lizard Spock");
                 return;
             }
 
-            _help = new Command("?", "help");
-            _exit = new Command("0", "exit");
+            _help = new Command("help", "?");
+            _exit = new Command("exit", "0");
             _moves = CreateMoves(args);
             var allCommands = new List<Command>();
             allCommands.AddRange(_moves);
@@ -32,23 +34,72 @@ namespace RockPaperScissors
 
         public void Start()
         {
-            var generator = RandomNumberGenerator.Create();
-            var hmacKey = "";
-            Print($"HMAC: {hmacKey}");
+            var compMove = CompMove(_moves);
+            var hmacKey = GenerateHmacKey();
+            var hash = GenerateHash(hmacKey, compMove.Name);
+            Println($"HMAC: {Convert.ToHexString(hash)}");
+
+
 
             bool isRightMove = false;
             do
             {
                 PrintCommands(_allCommands);
+                Println();
+
+                Print("Enter your move: ");
+                var input = Read();
+
+                Command userCmd;
+                bool isCmdFind = TryFindCommand(input, _allCommands, out userCmd);
+
+                if (!isCmdFind)
+                {
+                    isRightMove = false;
+                    continue;
+                }
+
+                if (userCmd == _exit)
+                {
+                    Println("Your command: " + userCmd.Name);
+                    return;
+                }
+
+                if (userCmd == _help)
+                {
+                    Println("Your command: " + userCmd.Name);
+                    PrintHelp();
+                    continue;
+                }
+
+                if (userCmd is Move)
+                {
+                    isRightMove = true;
+                    var userMove = userCmd as Move;
+                    Println("Your move: " + userCmd.Name);
+                    Println("Computer move: " + compMove.Name);
+
+                    var result = userMove.Clash(compMove, _moves.Length+1);
+
+                    switch (result)
+                    {
+                        case ClashResult.Win:
+                            Println("You win!");
+                            break;
+                        case ClashResult.Lose:
+                            Println("You lose!");
+                            break;
+                        case ClashResult.Draw:
+                            Println("Draw!");
+                            break;
+                        default:
+                            break;
+                    }
+                }
 
             } while (!isRightMove);
 
-            Console.Write("Your move: ");
-
-
-            var move = "";
-            Print($"Computer move: : {move}");
-            Print($"HMAC key: {hmacKey}");
+            Println($"HMAC key: {Convert.ToHexString(hmacKey)}");
         }
 
         private bool CheckInput(string[] input)
@@ -56,44 +107,97 @@ namespace RockPaperScissors
             var isRight = true;
             if (input == null || input.Length < 3)
             {
-                Print("the number of input lines must be >= 3");
+                Println("the number of input lines must be >= 3");
                 isRight = false;
             }
             if (input.Length % 2 == 0)
             {
-                Print("the number of input lines must be odd");
+                Println("the number of input lines must be odd");
                 isRight = false;
             }
             if (input.Distinct().Count() != input.Length)
             {
-                Print("input has duplicate");
+                Println("input has duplicate");
                 isRight = false;
             }
             return isRight;
         }
-
 
         private Move[] CreateMoves(string[] args)
         {
             var moves = new List<Move>();
             for (int i = 0; i < args.Length; i++)
             {
-                moves.Add(new Move(args[i], i.ToString(), i));
+                moves.Add(new Move(args[i], $"{i + 1}", i+1));
             }
             return moves.ToArray();
+        }
+
+        private void Print(string msg)
+        {
+            Console.Write(msg);
         }
 
         private void PrintCommands(Command[] commands)
         {
             foreach (var cmd in commands)
             {
-                Print($"{cmd.Ch} - {cmd.Name}");
+                Println($"{cmd.Ch} - {cmd.Name}");
             }
         }
 
-        private void Print(string msg)
+        private void Println(string msg)
         {
-            Console.WriteLine(msg);
+            Print(msg + Environment.NewLine);
+        }
+
+        private void Println() => Println("");
+
+        private void PrintHelp()
+        {
+
+        }
+
+        private Move CompMove(Move[] moves)
+        {
+            var number = RandomNumberGenerator.GetInt32(moves.Length);
+            return moves[number];
+        }
+
+        private string Read()
+        {
+            return Console.ReadLine();
+        }
+
+        private bool TryFindCommand(string input, Command[] commands, out Command command)
+        {
+            bool isFind = false;
+            var chCmds = commands.ToDictionary(c => c.Ch);
+            isFind = chCmds.TryGetValue(input, out command);
+            if (isFind) return true;
+
+            chCmds = commands.ToDictionary(c => c.Name.ToLower());
+            isFind = chCmds.TryGetValue(input.ToLower(), out command);
+            return isFind;
+        }
+
+        private byte[] GenerateHash(byte[] hmacKey, string input)
+        {
+            byte[] hash;
+            var inputBytes = Encoding.Default.GetBytes(input);
+            using (var hmac = new HMACSHA512(hmacKey))
+            {
+                hash = hmac.ComputeHash(inputBytes);
+            }
+            return hash;
+        }
+
+        private byte[] GenerateHmacKey()
+        {
+            var hmacKey = new byte[128 / 8];
+            var generator = RandomNumberGenerator.Create();
+            generator.GetBytes(hmacKey);
+            return hmacKey;
         }
     }
 }
