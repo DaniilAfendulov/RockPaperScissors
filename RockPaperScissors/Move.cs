@@ -16,10 +16,33 @@ namespace RockPaperScissors
 
         public ClashResult Clash(Move move, int maxOrder)
         {
+            if(move == null) throw new ArgumentNullException("move parameter does not have a value");
             if (move.Order == Order) return ClashResult.Draw;
-            if (move.Order > Order) return ClashResult.Lose;
-            if (move.Order < Order) return ClashResult.Win;
-            throw new ArgumentNullException("move parameter does not have a value");
+            var half = (maxOrder - 1) / 2;
+            if (move.Order > Order)
+            {
+                if (move.Order - Order <= half)
+                {
+                    return ClashResult.Lose;
+                }
+                return ClashResult.Win;
+            }
+            if (Order - move.Order <= half)
+            {
+                return ClashResult.Win;
+            }
+            return ClashResult.Lose;
+            
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Move && base.Equals(obj))
+            {
+                var move = obj as Move;
+                return Order == move.Order;
+            }
+            return false;
         }
     }
 }
