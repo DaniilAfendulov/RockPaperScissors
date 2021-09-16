@@ -155,15 +155,7 @@ namespace RockPaperScissors
 
         private void PrintHelpTable(Move[] moves)
         {
-            var table = new ConsoleTable(moves.Select(m => m.Name).Prepend("pc\\user").ToArray());
-            foreach (var pcMove in moves)
-            {
-                var row = new List<string>();
-                row.Add(pcMove.Name);
-                row.AddRange(moves.Select(um => um.Clash(pcMove, moves.Length).ToString()));
-                table.AddRow(row.ToArray());
-            }
-            table.Options.EnableCount = false;
+            var table = new HelpTable(moves);
             Println(table.ToString());
         }
 

@@ -10,7 +10,6 @@ namespace RockPaperScissors
     public class HelpTable
     {
         private ConsoleTable _table;
-        public Action<string> PrintMethod { get; set; }
         public HelpTable(Move[] moves)
         {
             _table = new ConsoleTable(moves.Select(m => m.Name).Prepend("pc\\user").ToArray());
@@ -22,12 +21,11 @@ namespace RockPaperScissors
                 _table.AddRow(row.ToArray());
             }
             _table.Options.EnableCount = false;
-            PrintMethod = Console.WriteLine;
         }
 
-        public void Print()
+        public override string ToString()
         {
-            PrintMethod(_table.ToString());
+            return _table.ToString();
         }
     }
 }
