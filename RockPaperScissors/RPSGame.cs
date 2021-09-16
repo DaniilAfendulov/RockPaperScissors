@@ -195,10 +195,7 @@ namespace RockPaperScissors
 
         private byte[] GenerateHmacKey()
         {
-            var hmacKey = new byte[128 / 8];
-            var generator = RandomNumberGenerator.Create();
-            generator.GetBytes(hmacKey);
-            return hmacKey;
+            return new HmacKeyGenerator().GenerateKey();
         }
     }
 }
