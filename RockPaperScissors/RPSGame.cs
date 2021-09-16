@@ -184,13 +184,7 @@ namespace RockPaperScissors
 
         private byte[] GenerateHash(byte[] hmacKey, string input)
         {
-            byte[] hash;
-            var inputBytes = Encoding.Default.GetBytes(input);
-            using (var hmac = new HMACSHA512(hmacKey))
-            {
-                hash = hmac.ComputeHash(inputBytes);
-            }
-            return hash;
+            return new HmacGenerator().GenerateHash(hmacKey, input);
         }
 
         private byte[] GenerateHmacKey()
