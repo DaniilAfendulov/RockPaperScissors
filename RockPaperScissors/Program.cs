@@ -4,8 +4,16 @@
     {
         static void Main(string[] args)
         {
-            var game = new RPSGame(args);
-            game.Start();
+            try
+            {
+                var game = new RPSGame(args);
+                game.Start();
+            }
+            catch (System.Exception)
+            {
+                System.Console.WriteLine("Cannot start the game");
+            }
+
         }
       
     }
