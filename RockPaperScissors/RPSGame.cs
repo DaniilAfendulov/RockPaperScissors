@@ -25,11 +25,11 @@ namespace RockPaperScissors
             _help = new Command("help", "?");
             _exit = new Command("exit", "0");
             _moves = CreateMoves(args);
-            var allCommands = new List<Command>();
-            allCommands.AddRange(_moves);
-            allCommands.Add(_help);
-            allCommands.Add(_exit);
-            _allCommands = allCommands.ToArray();
+            _allCommands = _moves.
+                Select(m => (Command)m).
+                Append(_help).
+                Append(_exit).
+                ToArray();
         }
 
         public void Start()
@@ -61,13 +61,13 @@ namespace RockPaperScissors
 
                 if (userCmd == _exit)
                 {
-                    Println("Your command: " + userCmd.Name);
+                    PrintEnteredCommand(userCmd);
                     return;
                 }
 
                 if (userCmd == _help)
                 {
-                    Println("Your command: " + userCmd.Name);
+                    PrintEnteredCommand(userCmd);
                     PrintHelpTable(_moves);
                     continue;
                 }
@@ -80,21 +80,7 @@ namespace RockPaperScissors
                     Println("Computer move: " + compMove.Name);
 
                     var result = userMove.Clash(compMove, _moves.Length+1);
-
-                    switch (result)
-                    {
-                        case ClashResult.Win:
-                            Println("You win!");
-                            break;
-                        case ClashResult.Lose:
-                            Println("You lose!");
-                            break;
-                        case ClashResult.Draw:
-                            Println("Draw!");
-                            break;
-                        default:
-                            break;
-                    }
+                    PrintResult(result);                    
                 }
 
             } while (!isRightMove);
@@ -157,6 +143,24 @@ namespace RockPaperScissors
         {
             var table = new HelpTable(moves);
             Println(table.ToString());
+        }
+
+        private void PrintResult(ClashResult result)
+        {
+            Print("Result: ");
+            switch (result)
+            {
+                case ClashResult.Win:
+                case ClashResult.Lose:
+                    Print("You ");
+                    break;
+            }
+            Println(result.ToString());
+        }
+
+        private void PrintEnteredCommand(Command command)
+        {
+            Println("Your command: " + command.Name);
         }
 
         private Move CompMove(Move[] moves)
