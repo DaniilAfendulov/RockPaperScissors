@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using ConsoleTables;
 
 namespace RockPaperScissors
 {
@@ -11,7 +12,7 @@ namespace RockPaperScissors
         Command _help, _exit;
         Move[] _moves;
         Command[] _allCommands;
-
+        
         public RPSGame(string[] args)
         {
             if (!CheckInput(args))
@@ -21,7 +22,6 @@ namespace RockPaperScissors
                 Println("rock paper scissors lizard Spock");
                 return;
             }
-
             _help = new Command("help", "?");
             _exit = new Command("exit", "0");
             _moves = CreateMoves(args);
@@ -68,7 +68,7 @@ namespace RockPaperScissors
                 if (userCmd == _help)
                 {
                     Println("Your command: " + userCmd.Name);
-                    PrintHelp();
+                    PrintHelpTable(_moves);
                     continue;
                 }
 
@@ -153,9 +153,18 @@ namespace RockPaperScissors
 
         private void Println() => Println("");
 
-        private void PrintHelp()
+        private void PrintHelpTable(Move[] moves)
         {
-
+            var table = new ConsoleTable(moves.Select(m => m.Name).Prepend("pc\\user").ToArray());
+            foreach (var pcMove in moves)
+            {
+                var row = new List<string>();
+                row.Add(pcMove.Name);
+                row.AddRange(moves.Select(um => um.Clash(pcMove, moves.Length).ToString()));
+                table.AddRow(row.ToArray());
+            }
+            table.Options.EnableCount = false;
+            Println(table.ToString());
         }
 
         private Move CompMove(Move[] moves)

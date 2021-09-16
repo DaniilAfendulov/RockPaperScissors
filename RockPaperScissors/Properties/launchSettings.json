@@ -3,6 +3,14 @@
     "RockPaperScissors": {
       "commandName": "Project",
       "commandLineArgs": "rock paper scissors lizard Spock"
+    },
+    "3": {
+      "commandName": "Project",
+      "commandLineArgs": "rock paper scissors"
+    },
+    "5": {
+      "commandName": "Project",
+      "commandLineArgs": "rock paper scissors lizard Spock"
     }
   }
 }
