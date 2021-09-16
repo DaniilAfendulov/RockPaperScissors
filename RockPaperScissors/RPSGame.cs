@@ -20,6 +20,7 @@ namespace RockPaperScissors
                 Println();
                 Println("The input example:");
                 Println("rock paper scissors lizard Spock");
+                return;
             }
             _help = new Command("help", "?");
             _exit = new Command("exit", "0");
