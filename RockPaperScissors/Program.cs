@@ -7,7 +7,7 @@ namespace RockPaperScissors
         {
             try
             {
-                var game = new RPSGame(args);
+                var game = new RPSConsoleGame(args);
                 game.Start();
             }
             catch (ArgumentException ex)
