@@ -1,4 +1,5 @@
-﻿namespace RockPaperScissors
+﻿using System;
+namespace RockPaperScissors
 {
     class Program
     {
@@ -9,9 +10,16 @@
                 var game = new RPSGame(args);
                 game.Start();
             }
-            catch (System.Exception)
+            catch (ArgumentException ex)
             {
-                System.Console.WriteLine("Cannot start the game");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine();
+                Console.WriteLine("The input example:");
+                Console.WriteLine("rock paper scissors lizard Spock");
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Cannot start the game");
             }
 
         }

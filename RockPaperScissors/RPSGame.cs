@@ -17,11 +17,7 @@ namespace RockPaperScissors
         {
             if (!CheckInput(args, out var err))
             {
-                err.ForEach(e => Println(e));
-                Println();
-                Println("The input example:");
-                Println("rock paper scissors lizard Spock");
-                return;
+                throw new ArgumentException(string.Join('\n',err));
             }
             _help = new Command("help", "?");
             _exit = new Command("exit", "0");
@@ -172,12 +168,6 @@ namespace RockPaperScissors
         }
 
         private void Println() => Println("");
-
-        private void PrintHelpTable(Move[] moves)
-        {
-            var table = new HelpTable(moves);
-            Println(table.ToString());
-        }
 
         private void PrintResult(ClashResult result)
         {
