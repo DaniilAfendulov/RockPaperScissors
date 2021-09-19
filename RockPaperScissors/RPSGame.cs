@@ -9,9 +9,8 @@ namespace RockPaperScissors
 {
     public class RPSGame
     {
-        Command _help, _exit;
-        Move[] _moves;
-        Command[] _allCommands;
+        protected Move[] _moves;
+        protected WinRule _winRule;
         
         public RPSGame(string[] args)
         {
@@ -19,14 +18,8 @@ namespace RockPaperScissors
             {
                 throw new ArgumentException(string.Join('\n',err));
             }
-            _help = new Command("help", "?");
-            _exit = new Command("exit", "0");
             InitMoves(args);
-            _allCommands = _moves.
-                Select(m => (Command)m).
-                Append(_help).
-                Append(_exit).
-                ToArray();
+            _winRule = new WinRule(_moves.Length);
         }
 
         public RPSGame(Move[] moves)
@@ -34,63 +27,8 @@ namespace RockPaperScissors
             _moves = moves;
         }
 
-        public void Start()
-        {
-            var compMove = CompMove(_moves);
-            var hmacKey = GenerateHmacKey();
-            var hash = GenerateHash(hmacKey, compMove.Name);
-            Println($"HMAC: {Convert.ToHexString(hash)}");
 
-
-
-            bool isRightMove = false;
-            do
-            {
-                PrintCommands(_allCommands);
-                Println();
-
-                Print("Enter your move: ");
-                var input = Read();
-
-                Command userCmd;
-                bool isCmdFind = TryFindCommand(input, _allCommands, out userCmd);
-
-                if (!isCmdFind)
-                {
-                    isRightMove = false;
-                    continue;
-                }
-
-                if (userCmd == _exit)
-                {
-                    PrintEnteredCommand(userCmd);
-                    return;
-                }
-
-                if (userCmd == _help)
-                {
-                    PrintEnteredCommand(userCmd);
-                    Println(GetHelpTable());
-                    continue;
-                }
-
-                if (userCmd is Move)
-                {
-                    isRightMove = true;
-                    var userMove = userCmd as Move;
-                    Println("Your move: " + userCmd.Name);
-                    Println("Computer move: " + compMove.Name);
-
-                    var result = userMove.Clash(compMove, _moves.Length+1);
-                    PrintResult(result);                    
-                }
-
-            } while (!isRightMove);
-
-            Println($"HMAC key: {Convert.ToHexString(hmacKey)}");
-        }
-
-        public static bool CheckInput(string[] input, out List<string> err)
+        public static bool CheckInput(string[] input, out List<string> err, int ArgsNumberLimit=0)
         {
             err = new List<string>();
             var isRight = true;
@@ -107,6 +45,11 @@ namespace RockPaperScissors
             if (input.Distinct().Count() != input.Length)
             {
                 err.Add("input has duplicate");
+                isRight = false;
+            }
+            if (ArgsNumberLimit==0 && input.Length > ArgsNumberLimit)
+            {
+                err.Add("the number of input lines more than ArgsNumberLimit");
                 isRight = false;
             }
             return isRight;
@@ -146,59 +89,12 @@ namespace RockPaperScissors
             }
             return moves.ToArray();
         }
-
-        private void InitMoves(string[] args)
+        public void InitMoves(string[] args)
         {
             _moves = CreateMoves(args);
         }
 
-        private void Print(string msg)
-        {
-            Console.Write(msg);
-        }
-
-        private void PrintCommands(Command[] commands)
-        {
-            Println(GetCommandsText(commands));
-        }
-
-        private void Println(string msg)
-        {
-            Print(msg + Environment.NewLine);
-        }
-
-        private void Println() => Println("");
-
-        private void PrintResult(ClashResult result)
-        {
-            Print("Result: ");
-            switch (result)
-            {
-                case ClashResult.Win:
-                case ClashResult.Lose:
-                    Print("You ");
-                    break;
-            }
-            Println(result.ToString());
-        }
-
-        private void PrintEnteredCommand(Command command)
-        {
-            Println("Your command: " + command.Name);
-        }
-
-        private static Move CompMove(Move[] moves)
-        {
-            var number = RandomNumberGenerator.GetInt32(moves.Length);
-            return moves[number];
-        }
-
-        private string Read()
-        {
-            return Console.ReadLine();
-        }
-
-        private static bool TryFindCommand(string input, Command[] commands, out Command command)
+        public static bool TryFindCommand(string input, Command[] commands, out Command command)
         {
             bool isFind = false;
             var chCmds = commands.ToDictionary(c => c.Ch);
@@ -210,14 +106,33 @@ namespace RockPaperScissors
             return isFind;
         }
 
-        private byte[] GenerateHash(byte[] hmacKey, string input)
+        public static bool TryFindMove(string input, Move[] moves, out Move move)
         {
-            return new HmacGenerator().GenerateHash(hmacKey, input);
+            Command command;
+            if (TryFindCommand(
+                input,
+                moves.Select(m => (Command)m).ToArray(),
+                out command))
+            {
+                if (command is Move)
+                {
+                    move = command as Move;
+                    return true;
+                }
+            }
+            move = null;
+            return false;
+
+        }
+        public bool TryFindMove(string input, out Move move)
+        {
+            return TryFindMove(input, _moves, out move);
         }
 
-        private byte[] GenerateHmacKey()
+        public ClashResult FindResult(Move move1, Move move2)
         {
-            return new HmacKeyGenerator().GenerateKey();
+            return _winRule.FindClashResult(move1, move2);
         }
+
     }
 }
